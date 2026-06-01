@@ -1,0 +1,19 @@
+@startuml
+actor 学生
+participant "前端 CourseSelect" as Web
+participant "CourseSelectionController" as Controller
+participant "CourseSelectionService" as Service
+database "MySQL" as DB
+
+学生 -> Web: 点击选课
+Web -> Controller: POST /api/course-selections/select
+Controller -> Service: selectCourse(studentId, teachingClassId)
+Service -> DB: 查询教学班和课程状态
+Service -> DB: 检查重复选课
+Service -> DB: 检查容量
+Service -> DB: 检查时间冲突
+Service -> DB: 插入选课记录
+Service -> DB: 更新已选人数
+Service --> Controller: 选课结果
+Controller --> Web: success
+@enduml

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.scu.eduadmin.mapper.ReportMapper">
+  <select id="studentSchedule" resultType="map">
+    SELECT * FROM v_student_course_schedule
+    WHERE student_id = #{studentId}
+    <if test="semesterId != null">AND semester_id = #{semesterId}</if>
+    ORDER BY weekday, start_section
+  </select>
+
+  <select id="teacherRoster" resultType="map">
+    SELECT * FROM v_teacher_course_roster
+    WHERE teacher_id = #{teacherId}
+    <if test="teachingClassId != null">AND teaching_class_id = #{teachingClassId}</if>
+    ORDER BY teaching_class_code, student_no
+  </select>
+
+  <select id="gradeStatistics" resultType="map">
+    SELECT * FROM v_course_grade_statistics
+    <if test="courseId != null">WHERE course_id = #{courseId}</if>
+    ORDER BY course_code, teaching_class_code
+  </select>
+
+  <select id="completedCredits" resultType="map">
+    SELECT s.id, s.student_no, s.student_name,
+           IFNULL(SUM(c.credit), 0) AS completed_credit,
+           ROUND(AVG(g.grade_point), 2) AS avg_grade_point
+    FROM edu_student s
+    LEFT JOIN edu_course_selection cs ON cs.student_id = s.id AND cs.selection_status = 'selected'
+    LEFT JOIN edu_grade g ON g.selection_id = cs.id AND g.grade_status = 'submitted' AND g.score >= 60
+    LEFT JOIN edu_teaching_class tc ON tc.id = cs.teaching_class_id
+    LEFT JOIN edu_course c ON c.id = tc.course_id
+    WHERE s.id = #{studentId}
+    GROUP BY s.id, s.student_no, s.student_name
+  </select>
+
+  <select id="dashboardStats" resultType="map">
+    SELECT 'studentCount' AS metric, COUNT(*) AS value FROM edu_student
+    UNION ALL SELECT 'teacherCount', COUNT(*) FROM edu_teacher
+    UNION ALL SELECT 'courseCount', COUNT(*) FROM edu_course
+    UNION ALL SELECT 'selectionCount', COUNT(*) FROM edu_course_selection WHERE selection_status = 'selected'
+  </select>
+</mapper>

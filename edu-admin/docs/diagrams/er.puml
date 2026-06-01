@@ -1,0 +1,33 @@
+@startuml
+entity "学院 edu_college" as College
+entity "专业 edu_major" as Major
+entity "班级 edu_class" as Class
+entity "学生 edu_student" as Student
+entity "教师 edu_teacher" as Teacher
+entity "课程 edu_course" as Course
+entity "学期 edu_semester" as Semester
+entity "教室 edu_classroom" as Classroom
+entity "教学班 edu_teaching_class" as TeachingClass
+entity "课表 edu_teaching_class_schedule" as Schedule
+entity "选课 edu_course_selection" as Selection
+entity "成绩 edu_grade" as Grade
+entity "用户 sys_user" as User
+entity "角色 sys_role" as Role
+entity "权限 sys_permission" as Permission
+
+College ||--o{ Major
+Major ||--o{ Class
+Class ||--o{ Student
+College ||--o{ Teacher
+College ||--o{ Course
+Course ||--o{ TeachingClass
+Teacher ||--o{ TeachingClass
+Semester ||--o{ TeachingClass
+TeachingClass ||--o{ Schedule
+Classroom ||--o{ Schedule
+Student ||--o{ Selection
+TeachingClass ||--o{ Selection
+Selection ||--o| Grade
+User }o--o{ Role
+Role }o--o{ Permission
+@enduml

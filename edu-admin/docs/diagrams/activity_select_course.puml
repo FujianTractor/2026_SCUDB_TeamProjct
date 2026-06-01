@@ -1,0 +1,25 @@
+@startuml
+start
+:学生选择教学班;
+:查询教学班与课程;
+if (课程开放且启用?) then (是)
+  if (容量未满?) then (是)
+    if (未重复选课?) then (是)
+      if (无时间冲突?) then (是)
+        :插入选课记录;
+        :教学班已选人数加一;
+        :提交事务;
+      else (否)
+        :返回时间冲突;
+      endif
+    else (否)
+      :返回重复选课;
+    endif
+  else (否)
+    :返回容量已满;
+  endif
+else (否)
+  :返回课程不可选;
+endif
+stop
+@enduml

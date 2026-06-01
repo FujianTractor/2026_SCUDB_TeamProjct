@@ -1,0 +1,52 @@
+@startuml
+class sys_user {
+  id
+  username
+  password_hash
+  user_type
+}
+class edu_student {
+  id
+  class_id
+  student_no
+  student_name
+}
+class edu_teacher {
+  id
+  college_id
+  teacher_no
+  teacher_name
+}
+class edu_course {
+  id
+  course_code
+  course_name
+  credit
+}
+class edu_teaching_class {
+  id
+  course_id
+  teacher_id
+  semester_id
+  capacity
+  selected_count
+}
+class edu_course_selection {
+  id
+  student_id
+  teaching_class_id
+  selection_status
+}
+class edu_grade {
+  id
+  selection_id
+  score
+  grade_point
+}
+
+edu_student "1" -- "many" edu_course_selection
+edu_teaching_class "1" -- "many" edu_course_selection
+edu_course_selection "1" -- "0..1" edu_grade
+edu_course "1" -- "many" edu_teaching_class
+edu_teacher "1" -- "many" edu_teaching_class
+@enduml

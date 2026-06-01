@@ -1,0 +1,14 @@
+[     351ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5173/favicon.ico:0
+[    2647ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/api/auth/login:0
+[    2652ms] [WARNING] [Vue warn]: Unhandled error during execution of component event handler 
+  at <ElButton type="primary" size="large" style= {width: 100%}  ... > 
+  at <ElForm onKeyup=fn > 
+  at <Login onVnodeUnmounted=fn<onVnodeUnmounted> ref=Ref< Proxy(Object) > > 
+  at <RouterView> 
+  at <App> @ http://localhost:5173/node_modules/.vite/deps/chunk-JMTIAOMW.js?v=1c374639:2224
+[    2658ms] AxiosError: Request failed with status code 500
+    at settle (http://localhost:5173/node_modules/.vite/deps/axios.js?v=ab607c67:1441:12)
+    at XMLHttpRequest.onloadend (http://localhost:5173/node_modules/.vite/deps/axios.js?v=ab607c67:1845:7)
+    at Axios.request (http://localhost:5173/node_modules/.vite/deps/axios.js?v=ab607c67:2670:41)
+    at async Proxy.login (http://localhost:5173/src/stores/auth.js:17:20)
+    at async submit (http://localhost:5173/src/views/Login.vue:16:3)

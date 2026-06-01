@@ -1,0 +1,32 @@
+@startuml
+left to right direction
+actor 管理员 as Admin
+actor 教师 as Teacher
+actor 学生 as Student
+
+rectangle "SCU EduAdmin" {
+  usecase "登录" as UCLogin
+  usecase "基础数据管理" as UCBase
+  usecase "教学班管理" as UCTC
+  usecase "选课/退课" as UCSelect
+  usecase "查看课表" as UCSchedule
+  usecase "成绩录入" as UCGradeInput
+  usecase "成绩查询" as UCGradeQuery
+  usecase "统计报表" as UCReport
+  usecase "用户权限管理" as UCRbac
+}
+
+Admin --> UCLogin
+Admin --> UCBase
+Admin --> UCTC
+Admin --> UCReport
+Admin --> UCRbac
+Teacher --> UCLogin
+Teacher --> UCGradeInput
+Teacher --> UCGradeQuery
+Teacher --> UCReport
+Student --> UCLogin
+Student --> UCSelect
+Student --> UCSchedule
+Student --> UCGradeQuery
+@enduml

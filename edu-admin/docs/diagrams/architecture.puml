@@ -1,0 +1,16 @@
+@startuml
+node "浏览器" {
+  component "Vue 3 + Element Plus" as Frontend
+}
+node "应用服务器" {
+  component "Spring Boot Controller" as Controller
+  component "Service + Transaction" as Service
+  component "MyBatis Plus Mapper" as Mapper
+}
+database "MySQL 8.x" as DB
+
+Frontend --> Controller : RESTful API / Axios
+Controller --> Service
+Service --> Mapper
+Mapper --> DB
+@enduml
