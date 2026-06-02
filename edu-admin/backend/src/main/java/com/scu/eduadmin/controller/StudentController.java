@@ -15,17 +15,13 @@ import org.springframework.web.bind.annotation.*;
 public class StudentController {
   private final EduStudentService service;
 
-  @GetMapping
-  public ApiResponse<Page<EduStudent>> page(@RequestParam(defaultValue = "1") long pageNum,
-                                            @RequestParam(defaultValue = "10") long pageSize,
-                                            @RequestParam(required = false) Long classId,
-                                            @RequestParam(required = false) String keyword) {
-    LambdaQueryWrapper<EduStudent> query = new LambdaQueryWrapper<EduStudent>()
-        .eq(classId != null, EduStudent::getClassId, classId)
-        .and(StringUtils.hasText(keyword), q -> q.like(EduStudent::getStudentName, keyword).or().like(EduStudent::getStudentNo, keyword));
-    return ApiResponse.success(service.page(new Page<>(pageNum, pageSize), query));
-  }
-
+@GetMapping
+public ApiResponse<Page<StudentVO>> page(@RequestParam(defaultValue = "1") long pageNum,
+                                         @RequestParam(defaultValue = "10") long pageSize,
+                                         @RequestParam(required = false) Long classId,
+                                         @RequestParam(required = false) String keyword) {
+    return ApiResponse.success(service.selectStudentPage(pageNum, pageSize, classId, keyword));
+}
   @GetMapping("/{id}")
   public ApiResponse<EduStudent> detail(@PathVariable Long id) {
     return ApiResponse.success(service.getById(id));
