@@ -22,90 +22,94 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EduCourseSelectionServiceImpl extends ServiceImpl<EduCourseSelectionMapper, EduCourseSelection> implements EduCourseSelectionService {
-  private final EduTeachingClassMapper teachingClassMapper;
-  private final EduCourseMapper courseMapper;
-  private final EduTeachingClassScheduleMapper scheduleMapper;
+    private final EduTeachingClassMapper teachingClassMapper;
+    private final EduCourseMapper courseMapper;
+    private final EduTeachingClassScheduleMapper scheduleMapper;
 
-  @Override
-  @Transactional
-  public EduCourseSelection selectCourse(Long studentId, Long teachingClassId) {
-    EduTeachingClass teachingClass = teachingClassMapper.selectById(teachingClassId);
-    if (teachingClass == null || !"open".equals(teachingClass.getClassStatus())) {
-      throw new BusinessException("教学班不存在或未开放");
-    }
-    EduCourse course = courseMapper.selectById(teachingClass.getCourseId());
-    if (course == null || !"active".equals(course.getCourseStatus())) {
-      throw new BusinessException("课程不存在或已停用");
-    }
-    if (teachingClass.getSelectedCount() >= teachingClass.getCapacity()) {
-      throw new BusinessException("课程容量已满");
-    }
-
-    EduCourseSelection oldSelection = getOne(new LambdaQueryWrapper<EduCourseSelection>()
-        .eq(EduCourseSelection::getStudentId, studentId)
-        .eq(EduCourseSelection::getTeachingClassId, teachingClassId), false);
-    if (oldSelection != null && "selected".equals(oldSelection.getSelectionStatus())) {
-      throw new BusinessException("不能重复选课");
-    }
-    ensureNoScheduleConflict(studentId, teachingClassId);
-
-    EduCourseSelection selection = oldSelection == null ? new EduCourseSelection() : oldSelection;
-    selection.setStudentId(studentId);
-    selection.setTeachingClassId(teachingClassId);
-    selection.setSelectionStatus("selected");
-    selection.setSelectedAt(LocalDateTime.now());
-    selection.setDroppedAt(null);
-    saveOrUpdate(selection);
-
-    teachingClass.setSelectedCount(teachingClass.getSelectedCount() + 1);
-    teachingClassMapper.updateById(teachingClass);
-    return selection;
-  }
-
-  @Override
-  @Transactional
-  public void dropCourse(Long studentId, Long teachingClassId) {
-    EduCourseSelection selection = getOne(new LambdaQueryWrapper<EduCourseSelection>()
-        .eq(EduCourseSelection::getStudentId, studentId)
-        .eq(EduCourseSelection::getTeachingClassId, teachingClassId), false);
-    if (selection == null || !"selected".equals(selection.getSelectionStatus())) {
-      throw new BusinessException("未找到有效选课记录");
-    }
-    selection.setSelectionStatus("dropped");
-    selection.setDroppedAt(LocalDateTime.now());
-    updateById(selection);
-
-    EduTeachingClass teachingClass = teachingClassMapper.selectById(teachingClassId);
-    teachingClass.setSelectedCount(Math.max(0, teachingClass.getSelectedCount() - 1));
-    teachingClassMapper.updateById(teachingClass);
-  }
-
-  private void ensureNoScheduleConflict(Long studentId, Long targetTeachingClassId) {
-    List<EduTeachingClassSchedule> targetSchedules = scheduleMapper.selectList(
-        new LambdaQueryWrapper<EduTeachingClassSchedule>()
-            .eq(EduTeachingClassSchedule::getTeachingClassId, targetTeachingClassId));
-    if (targetSchedules.isEmpty()) {
-      return;
-    }
-    List<Long> selectedTeachingClassIds = list(new LambdaQueryWrapper<EduCourseSelection>()
-            .eq(EduCourseSelection::getStudentId, studentId)
-            .eq(EduCourseSelection::getSelectionStatus, "selected"))
-        .stream().map(EduCourseSelection::getTeachingClassId).toList();
-    if (selectedTeachingClassIds.isEmpty()) {
-      return;
-    }
-    List<EduTeachingClassSchedule> selectedSchedules = scheduleMapper.selectList(
-        new LambdaQueryWrapper<EduTeachingClassSchedule>()
-            .in(EduTeachingClassSchedule::getTeachingClassId, selectedTeachingClassIds));
-    for (EduTeachingClassSchedule target : targetSchedules) {
-      for (EduTeachingClassSchedule selected : selectedSchedules) {
-        boolean sameDay = target.getWeekday().equals(selected.getWeekday());
-        boolean overlap = target.getStartSection() <= selected.getEndSection()
-            && selected.getStartSection() <= target.getEndSection();
-        if (sameDay && overlap) {
-          throw new BusinessException("选课时间冲突");
+    @Override
+    @Transactional
+    public EduCourseSelection selectCourse(Long studentId, Long teachingClassId) {
+        EduTeachingClass teachingClass = teachingClassMapper.selectById(teachingClassId);
+        if (teachingClass == null || !"open".equals(teachingClass.getClassStatus())) {
+            throw new BusinessException("教学班不存在或未开放");
         }
-      }
+        EduCourse course = courseMapper.selectById(teachingClass.getCourseId());
+        if (course == null || !"active".equals(course.getCourseStatus())) {
+            throw new BusinessException("课程不存在或已停用");
+        }
+
+        EduCourseSelection oldSelection = getOne(new LambdaQueryWrapper<EduCourseSelection>()
+                .eq(EduCourseSelection::getStudentId, studentId)
+                .eq(EduCourseSelection::getTeachingClassId, teachingClassId), false);
+        if (oldSelection != null && "selected".equals(oldSelection.getSelectionStatus())) {
+            throw new BusinessException("不能重复选课");
+        }
+        ensureNoScheduleConflict(studentId, teachingClassId);
+
+        // 核心并发控制：使用数据库原子性更新防止超卖（代替了原本不安全的先查后加）
+        int updatedRows = teachingClassMapper.incrementSelectedCountIfUnderCapacity(
+                teachingClassId, 
+                teachingClass.getCapacity()
+        );
+        if (updatedRows == 0) {
+            throw new BusinessException("课程容量已满，选课失败");
+        }
+
+        EduCourseSelection selection = oldSelection == null ? new EduCourseSelection() : oldSelection;
+        selection.setStudentId(studentId);
+        selection.setTeachingClassId(teachingClassId);
+        selection.setSelectionStatus("selected");
+        selection.setSelectedAt(LocalDateTime.now());
+        selection.setDroppedAt(null);
+        saveOrUpdate(selection);
+
+        return selection;
     }
-  }
+
+    @Override
+    @Transactional
+    public void dropCourse(Long studentId, Long teachingClassId) {
+        EduCourseSelection selection = getOne(new LambdaQueryWrapper<EduCourseSelection>()
+                .eq(EduCourseSelection::getStudentId, studentId)
+                .eq(EduCourseSelection::getTeachingClassId, teachingClassId), false);
+        if (selection == null || !"selected".equals(selection.getSelectionStatus())) {
+            throw new BusinessException("未找到有效选课记录");
+        }
+        selection.setSelectionStatus("dropped");
+        selection.setDroppedAt(LocalDateTime.now());
+        updateById(selection);
+
+        EduTeachingClass teachingClass = teachingClassMapper.selectById(teachingClassId);
+        teachingClass.setSelectedCount(Math.max(0, teachingClass.getSelectedCount() - 1));
+        teachingClassMapper.updateById(teachingClass);
+    }
+
+    private void ensureNoScheduleConflict(Long studentId, Long targetTeachingClassId) {
+        List<EduTeachingClassSchedule> targetSchedules = scheduleMapper.selectList(
+                new LambdaQueryWrapper<EduTeachingClassSchedule>()
+                        .eq(EduTeachingClassSchedule::getTeachingClassId, targetTeachingClassId));
+        if (targetSchedules.isEmpty()) {
+            return;
+        }
+        List<Long> selectedTeachingClassIds = list(new LambdaQueryWrapper<EduCourseSelection>()
+                        .eq(EduCourseSelection::getStudentId, studentId)
+                        .eq(EduCourseSelection::getSelectionStatus, "selected"))
+                .stream().map(EduCourseSelection::getTeachingClassId).toList();
+        if (selectedTeachingClassIds.isEmpty()) {
+            return;
+        }
+        List<EduTeachingClassSchedule> selectedSchedules = scheduleMapper.selectList(
+                new LambdaQueryWrapper<EduTeachingClassSchedule>()
+                        .in(EduTeachingClassSchedule::getTeachingClassId, selectedTeachingClassIds));
+        for (EduTeachingClassSchedule target : targetSchedules) {
+            for (EduTeachingClassSchedule selected : selectedSchedules) {
+                boolean sameDay = target.getWeekday().equals(selected.getWeekday());
+                boolean overlap = target.getStartSection() <= selected.getEndSection()
+                        && selected.getStartSection() <= target.getEndSection();
+                if (sameDay && overlap) {
+                    throw new BusinessException("选课时间冲突");
+                }
+            }
+        }
+    }
 }
