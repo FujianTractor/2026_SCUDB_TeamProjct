@@ -8,4 +8,8 @@ import com.scu.eduadmin.vo.StudentVO;
 public interface EduStudentService extends IService<EduStudent> {
 
     Page<StudentVO> selectStudentPage(long pageNum, long pageSize, Long classId, String keyword);
+
+    boolean removeStudentCascade(Long studentId);
+
+    boolean updateStudentIdCascade(Long oldId, Long newId);
 }
