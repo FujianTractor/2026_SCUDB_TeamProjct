@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.scu.eduadmin.entity.EduCourse;
 import com.scu.eduadmin.entity.EduCourseSelection;
+import com.scu.eduadmin.entity.EduGrade;
 import com.scu.eduadmin.entity.EduTeachingClass;
 import com.scu.eduadmin.entity.EduTeachingClassSchedule;
 import com.scu.eduadmin.exception.BusinessException;
 import com.scu.eduadmin.mapper.EduCourseMapper;
 import com.scu.eduadmin.mapper.EduCourseSelectionMapper;
+import com.scu.eduadmin.mapper.EduGradeMapper;
 import com.scu.eduadmin.mapper.EduTeachingClassMapper;
 import com.scu.eduadmin.mapper.EduTeachingClassScheduleMapper;
 import com.scu.eduadmin.service.EduCourseSelectionService;
@@ -25,6 +27,7 @@ public class EduCourseSelectionServiceImpl extends ServiceImpl<EduCourseSelectio
     private final EduTeachingClassMapper teachingClassMapper;
     private final EduCourseMapper courseMapper;
     private final EduTeachingClassScheduleMapper scheduleMapper;
+    private final EduGradeMapper eduGradeMapper;
 
     @Override
     @Transactional
@@ -46,7 +49,6 @@ public class EduCourseSelectionServiceImpl extends ServiceImpl<EduCourseSelectio
         }
         ensureNoScheduleConflict(studentId, teachingClassId);
 
-        // 核心并发控制：使用数据库原子性更新防止超卖（代替了原本不安全的先查后加）
         int updatedRows = teachingClassMapper.incrementSelectedCountIfUnderCapacity(
                 teachingClassId, 
                 teachingClass.getCapacity()
@@ -75,6 +77,18 @@ public class EduCourseSelectionServiceImpl extends ServiceImpl<EduCourseSelectio
         if (selection == null || !"selected".equals(selection.getSelectionStatus())) {
             throw new BusinessException("未找到有效选课记录");
         }
+
+        EduGrade grade = eduGradeMapper.selectOne(new LambdaQueryWrapper<EduGrade>()
+                .eq(EduGrade::getSelectionId, selection.getId()));
+
+        if (grade != null) {
+            if (grade.getScore() != null && grade.getScore() > 0) {
+                throw new BusinessException("该课程已录入成绩，无法退课，请联系教务处处理！");
+            } else {
+                eduGradeMapper.deleteById(grade.getId());
+            }
+        }
+
         selection.setSelectionStatus("dropped");
         selection.setDroppedAt(LocalDateTime.now());
         updateById(selection);
