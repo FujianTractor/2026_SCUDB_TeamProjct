@@ -1,4 +1,5 @@
 USE scu_edu_admin;
+SET NAMES utf8mb4;
 
 INSERT INTO sys_role (id, role_code, role_name) VALUES
 (1, 'ADMIN', '系统管理员'),
@@ -37,9 +38,9 @@ INSERT INTO sys_role_permission (role_id, permission_id) VALUES
 
 -- BCrypt("password")
 INSERT INTO sys_user (id, username, password_hash, real_name, user_type, related_id) VALUES
-(1, 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '系统管理员', 'admin', NULL),
-(2, 'teacher001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '张明', 'teacher', 1),
-(3, 'student001', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '李华', 'student', 1);
+(1, 'admin', '$2a$10$tNLqDC68H1WvDhDvvnnx7OaqwSSfatnzuL84eFkTqxAmDuMhnmSOG', '系统管理员', 'admin', NULL),
+(2, 'teacher001', '$2a$10$tNLqDC68H1WvDhDvvnnx7OaqwSSfatnzuL84eFkTqxAmDuMhnmSOG', '张明', 'teacher', 1),
+(3, 'student001', '$2a$10$tNLqDC68H1WvDhDvvnnx7OaqwSSfatnzuL84eFkTqxAmDuMhnmSOG', '李华', 'student', 1);
 
 INSERT INTO sys_user_role (user_id, role_id) VALUES
 (1, 1), (2, 2), (3, 3);

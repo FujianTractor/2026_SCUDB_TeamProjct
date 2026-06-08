@@ -1,6 +1,7 @@
 DROP DATABASE IF EXISTS scu_edu_admin;
 CREATE DATABASE scu_edu_admin DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE scu_edu_admin;
+SET NAMES utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
