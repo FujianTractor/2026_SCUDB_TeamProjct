@@ -1,0 +1,36 @@
+package com.scu.eduadmin.vo;
+
+import lombok.Data;
+
+import java.math.BigDecimal;
+
+/**
+ * 我的成绩视图对象
+ */
+@Data
+public class GradeVO {
+    /**
+     * 选课ID (用于前端唯一标识，或者退课/修改时使用)
+     */
+    private Long selectionId;
+
+    /**
+     * 课程名称
+     */
+    private String courseName;
+
+    /**
+     * 学分
+     */
+    private Integer credits;
+
+    /**
+     * 学期 (例如: 2023-2024-1)
+     */
+    private String semester;
+
+    /**
+     * 成绩分数
+     */
+    private BigDecimal score;
+}
