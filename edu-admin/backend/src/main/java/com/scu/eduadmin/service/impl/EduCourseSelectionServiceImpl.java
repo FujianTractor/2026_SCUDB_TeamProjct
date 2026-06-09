@@ -50,7 +50,7 @@ public class EduCourseSelectionServiceImpl extends ServiceImpl<EduCourseSelectio
         ensureNoScheduleConflict(studentId, teachingClassId);
 
         int updatedRows = teachingClassMapper.incrementSelectedCountIfUnderCapacity(
-                teachingClassId, 
+                teachingClassId,
                 teachingClass.getCapacity()
         );
         if (updatedRows == 0) {
@@ -93,9 +93,11 @@ public class EduCourseSelectionServiceImpl extends ServiceImpl<EduCourseSelectio
         selection.setDroppedAt(LocalDateTime.now());
         updateById(selection);
 
-        EduTeachingClass teachingClass = teachingClassMapper.selectById(teachingClassId);
-        teachingClass.setSelectedCount(Math.max(0, teachingClass.getSelectedCount() - 1));
-        teachingClassMapper.updateById(teachingClass);
+        // 使用原子性减法操作，并检查是否成功
+        int updatedRows = teachingClassMapper.decrementSelectedCount(teachingClassId);
+        if (updatedRows == 0) {
+            throw new BusinessException("退课失败，当前人数状态异常");
+        }
     }
 
     private void ensureNoScheduleConflict(Long studentId, Long targetTeachingClassId) {
