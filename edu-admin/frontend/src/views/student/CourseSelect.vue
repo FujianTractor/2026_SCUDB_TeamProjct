@@ -40,9 +40,22 @@ async function load() {
 }
 
 async function select(row) {
-  await courseSelectionApi.select({ studentId: auth.user?.relatedId || 1, teachingClassId: row.id })
-  ElMessage.success('选课成功')
-  load()
+  // 核心修改：移除了 || 1 的硬编码逻辑
+  if (!auth.user?.relatedId) {
+    ElMessage.error('用户信息缺失，请重新登录')
+    return
+  }
+
+  try {
+    await courseSelectionApi.select({
+      studentId: auth.user.relatedId,
+      teachingClassId: row.id
+    })
+    ElMessage.success('选课成功')
+    load()
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 onMounted(load)
