@@ -25,14 +25,18 @@ import { useAuthStore } from '../../stores/auth'
 
 const auth = useAuthStore()
 const rows = ref([])
+
 async function load() {
-  const data = await courseSelectionApi.page({ studentId: auth.user?.relatedId || 1, pageNum: 1, pageSize: 100 })
+  const data = await courseSelectionApi.page({ studentId: auth.user?.relatedId, pageNum: 1, pageSize: 100 })
   rows.value = data.records || []
 }
+
 async function drop(row) {
-  await courseSelectionApi.drop({ studentId: auth.user?.relatedId || 1, teachingClassId: row.teachingClassId })
+  if (!auth.user?.relatedId) return
+  await courseSelectionApi.drop({ studentId: auth.user.relatedId, teachingClassId: row.teachingClassId })
   ElMessage.success('退课成功')
   load()
 }
+
 onMounted(load)
 </script>
