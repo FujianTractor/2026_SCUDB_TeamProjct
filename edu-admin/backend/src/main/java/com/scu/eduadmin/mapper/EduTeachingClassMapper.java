@@ -13,6 +13,10 @@ public interface EduTeachingClassMapper extends BaseMapper<EduTeachingClass> {
 
     @Update("UPDATE edu_teaching_class SET selected_count = selected_count + 1 " +
             "WHERE id = #{teachingClassId} AND selected_count < #{capacity}")
-    int incrementSelectedCountIfUnderCapacity(@Param("teachingClassId") Long teachingClassId, 
-                                             @Param("capacity") Integer capacity);
+    int incrementSelectedCountIfUnderCapacity(@Param("teachingClassId") Long teachingClassId,
+                                              @Param("capacity") Integer capacity);
+
+    @Update("UPDATE edu_teaching_class SET selected_count = selected_count - 1 " +
+            "WHERE id = #{teachingClassId} AND selected_count > 0")
+    int decrementSelectedCount(@Param("teachingClassId") Long teachingClassId);
 }
