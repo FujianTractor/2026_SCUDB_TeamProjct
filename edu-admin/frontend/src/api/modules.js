@@ -19,7 +19,8 @@ export const courseSelectionApi = {
 
 export const gradeApi = {
   page: (params) => request.get('/grades', { params }),
-  batch: (grades) => request.post('/grades/batch', { grades })
+  batch: (grades) => request.post('/grades/batch', { grades }),
+  myGrades: (params) => request.get('/grades/my-grades', { params })
 }
 
 export const reportApi = {
