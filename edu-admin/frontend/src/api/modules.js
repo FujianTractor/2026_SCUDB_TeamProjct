@@ -14,7 +14,8 @@ export const crudApi = (endpoint) => ({
 export const courseSelectionApi = {
   page: (params) => request.get('/course-selections', { params }),
   select: (data) => request.post('/course-selections/select', data),
-  drop: (data) => request.post('/course-selections/drop', data)
+  drop: (data) => request.post('/course-selections/drop', data),
+  roster: (params) => request.get('/course-selections/roster', { params }) 
 }
 
 export const gradeApi = {
