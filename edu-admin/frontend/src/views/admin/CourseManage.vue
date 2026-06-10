@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue' 
 import CrudPage from '../../components/CrudPage.vue'
 
 const teacherList = ref([])
@@ -42,15 +42,18 @@ const fields = ref([
   }
 ])
 
+
 const updateTeacherOptions = () => {
   const teacherField = fields.value.find(f => f.prop === 'teacherId')
   if (teacherField) {
     teacherField.options = teacherList.value.map(t => ({
-      label: t.teacherName || t.name,
+      label: t.teacherName || t.name, 
       value: t.id
     }))
   }
 }
 
+
 watch(teacherList, updateTeacherOptions)
+
 </script>
