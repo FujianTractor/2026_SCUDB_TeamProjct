@@ -16,6 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class EduStudentServiceImpl extends ServiceImpl<EduStudentMapper, EduStudent> implements EduStudentService {
 
@@ -31,12 +35,30 @@ public class EduStudentServiceImpl extends ServiceImpl<EduStudentMapper, EduStud
         return this.baseMapper.selectStudentPage(page, classId, keyword);
     }
 
+    /**
+     * 【核心修改】修复了原先 inSql 导致的删除失败问题
+     */
     @Override
     @Transactional
     public boolean removeStudentCascade(Long studentId) {
-        eduGradeMapper.delete(new QueryWrapper<EduGrade>()
-                .inSql("selection_id", "SELECT id FROM edu_course_selection WHERE student_id = " + studentId));
+        // 第一步：查出该学生所有的选课记录ID
+        List<EduCourseSelection> selections = eduCourseSelectionMapper.selectList(
+                new QueryWrapper<EduCourseSelection>().eq("student_id", studentId)
+        );
+
+        // 第二步：如果有选课记录，再根据这些ID去安全地删除成绩表数据
+        if (selections != null && !selections.isEmpty()) {
+            List<Long> selectionIds = selections.stream()
+                    .map(EduCourseSelection::getId)
+                    .collect(Collectors.toList());
+            
+            eduGradeMapper.delete(new QueryWrapper<EduGrade>().in("selection_id", selectionIds));
+        }
+
+        // 第三步：清空该学生的所有选课记录
         eduCourseSelectionMapper.delete(new QueryWrapper<EduCourseSelection>().eq("student_id", studentId));
+
+        // 第四步：最后删除学生本身
         return this.removeById(studentId);
     }
 
