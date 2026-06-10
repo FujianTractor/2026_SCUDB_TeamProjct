@@ -6,14 +6,11 @@ import com.scu.eduadmin.common.ApiResponse;
 import com.scu.eduadmin.dto.CourseSelectRequest;
 import com.scu.eduadmin.entity.EduCourseSelection;
 import com.scu.eduadmin.service.EduCourseSelectionService;
-
 import com.scu.eduadmin.vo.StudentRosterVO; 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.jdbc.core.JdbcTemplate; 
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List; 
 
 @RestController
@@ -22,7 +19,6 @@ import java.util.List;
 public class CourseSelectionController {
   
   private final EduCourseSelectionService service;
-
   private final JdbcTemplate jdbcTemplate; 
 
   @GetMapping
@@ -68,8 +64,12 @@ public class CourseSelectionController {
 
  
   @GetMapping("/roster")
-  public ApiResponse<List<StudentRosterVO>> getRoster(@RequestParam Long teachingClassId) {
-      String sql = """
+  public ApiResponse<List<StudentRosterVO>> getRoster(
+          @RequestParam Long teachingClassId,
+          @RequestParam(required = false) String keyword) {
+      
+     
+      StringBuilder sqlBuilder = new StringBuilder("""
           SELECT 
               s.id AS studentId,
               s.student_no AS studentNo,
@@ -80,10 +80,21 @@ public class CourseSelectionController {
           JOIN edu_student s ON cs.student_id = s.id
           JOIN edu_admin_class ac ON s.class_id = ac.id
           WHERE cs.teaching_class_id = ?
-          ORDER BY ac.class_name, s.student_no
-          """;
+          """);
+      
+      List<Object> params = new java.util.ArrayList<>();
+      params.add(teachingClassId);
+      
+    
+      if (keyword != null && !keyword.trim().isEmpty()) {
+          sqlBuilder.append(" AND (s.student_name LIKE CONCAT('%', ?, '%') OR s.student_no LIKE CONCAT('%', ?, '%')) ");
+          params.add(keyword.trim());
+          params.add(keyword.trim());
+      }
+      
+      sqlBuilder.append(" ORDER BY ac.class_name, s.student_no");
 
-      List<StudentRosterVO> roster = jdbcTemplate.query(sql, (rs, rowNum) -> {
+      List<StudentRosterVO> roster = jdbcTemplate.query(sqlBuilder.toString(), (rs, rowNum) -> {
           StudentRosterVO vo = new StudentRosterVO();
           vo.setStudentId(rs.getLong("studentId"));
           vo.setStudentNo(rs.getString("studentNo"));
@@ -91,9 +102,8 @@ public class CourseSelectionController {
           vo.setClassName(rs.getString("className"));
           vo.setStatus(rs.getString("status"));
           return vo;
-      }, teachingClassId);
+      }, params.toArray());
 
       return ApiResponse.success(roster);
   }
-  // ==================== 【新增代码结束】====================
 }
