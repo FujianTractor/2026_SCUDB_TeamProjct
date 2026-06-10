@@ -6,15 +6,24 @@ import com.scu.eduadmin.common.ApiResponse;
 import com.scu.eduadmin.dto.CourseSelectRequest;
 import com.scu.eduadmin.entity.EduCourseSelection;
 import com.scu.eduadmin.service.EduCourseSelectionService;
+
+import com.scu.eduadmin.vo.StudentRosterVO; 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.jdbc.core.JdbcTemplate; 
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List; 
 
 @RestController
 @RequestMapping("/api/course-selections")
 @RequiredArgsConstructor
 public class CourseSelectionController {
+  
   private final EduCourseSelectionService service;
+
+  private final JdbcTemplate jdbcTemplate; 
 
   @GetMapping
   public ApiResponse<Page<EduCourseSelection>> page(@RequestParam(defaultValue = "1") long pageNum,
@@ -56,4 +65,35 @@ public class CourseSelectionController {
     service.dropCourse(request.getStudentId(), request.getTeachingClassId());
     return ApiResponse.success();
   }
+
+ 
+  @GetMapping("/roster")
+  public ApiResponse<List<StudentRosterVO>> getRoster(@RequestParam Long teachingClassId) {
+      String sql = """
+          SELECT 
+              s.id AS studentId,
+              s.student_no AS studentNo,
+              s.student_name AS studentName,
+              ac.class_name AS className,
+              cs.status AS status
+          FROM edu_course_selection cs
+          JOIN edu_student s ON cs.student_id = s.id
+          JOIN edu_admin_class ac ON s.class_id = ac.id
+          WHERE cs.teaching_class_id = ?
+          ORDER BY ac.class_name, s.student_no
+          """;
+
+      List<StudentRosterVO> roster = jdbcTemplate.query(sql, (rs, rowNum) -> {
+          StudentRosterVO vo = new StudentRosterVO();
+          vo.setStudentId(rs.getLong("studentId"));
+          vo.setStudentNo(rs.getString("studentNo"));
+          vo.setStudentName(rs.getString("studentName"));
+          vo.setClassName(rs.getString("className"));
+          vo.setStatus(rs.getString("status"));
+          return vo;
+      }, teachingClassId);
+
+      return ApiResponse.success(roster);
+  }
+  // ==================== 【新增代码结束】====================
 }
