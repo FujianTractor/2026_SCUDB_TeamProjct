@@ -1,14 +1,14 @@
 <template>
   <div class="page">
-  
-    <CrudPage title="我的授课" endpoint="/teaching-classes" :fields="fields">
     
+    <CrudPage title="我的授课" endpoint="/teaching-classes" :fields="fields">
+  
       <template #action="{ row }">
         <el-button type="primary" link @click="openRoster(row)">查看名单</el-button>
       </template>
     </CrudPage>
 
-    
+
     <el-dialog v-model="dialogVisible" title="选课学生名单" width="600px">
       <el-table :data="rosterList" border style="width: 100%">
         <el-table-column prop="studentNo" label="学号" />
@@ -43,10 +43,13 @@ const rosterList = ref([])
 
 const openRoster = async (row) => {
   try {
-   
+  
     const res = await courseSelectionApi.roster({ teachingClassId: row.id })
     rosterList.value = res || []
     dialogVisible.value = true
   } catch (error) {
     console.error(error)
-    ElMessage.
+    ElMessage.error('获取学生名单失败')
+  }
+}
+</script>
