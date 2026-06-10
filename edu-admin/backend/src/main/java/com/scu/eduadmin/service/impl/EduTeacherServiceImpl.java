@@ -12,37 +12,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import com.scu.eduadmin.common.BusinessException; 
+import com.scu.eduadmin.common.BusinessException;
 
 @Service
 public class EduTeacherServiceImpl extends ServiceImpl<EduTeacherMapper, EduTeacher> implements EduTeacherService {
 
-   
     @Autowired
     private EduTeachingClassMapper teachingClassMapper;
 
-   
-    @Transactional
-    public boolean removeTeacherCascade(Long teacherId) {
+ 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeById(java.io.Serializable id) {
        
-        long classCount = teachingUpClassMapper.selectCount(
-                new QueryWrapper<EduTeachingClass>().eq("teacher_id", teacherId)
-        );
+        QueryWrapper<EduTeachingClass> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teacher_id", id);
+        Integer count = teachingClassMapper.selectCount(queryWrapper);
 
        
-        if (classCount > 0) {
-            throw new BusinessException("该教师当前有授课班级，无法删除！请先调整排课或结课后重试。");
+        if (count != null && count > 0) {
+            throw new BusinessException("该教师仍有授课任务（" + count + "个教学班），无法删除！");
         }
 
        
-        return this.removeById(teacherId);
-    }
-
-   
-    @Override
-    @Transactional
-    public boolean removeById(Serializable id) {
-       
-        return removeTeacherCascade((Long) id);
+        return super.removeById(id);
     }
 }
