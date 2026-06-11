@@ -8,6 +8,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP VIEW IF EXISTS v_student_course_schedule;
 DROP VIEW IF EXISTS v_teacher_course_roster;
 DROP VIEW IF EXISTS v_course_grade_statistics;
+DROP VIEW IF EXISTS v_teaching_class_detail;
+DROP VIEW IF EXISTS v_student_course_selection_detail;
+DROP VIEW IF EXISTS v_student_grade_detail;
 
 DROP TABLE IF EXISTS edu_operation_log;
 DROP TABLE IF EXISTS edu_grade;
@@ -365,6 +368,60 @@ JOIN edu_teaching_class tc ON tc.course_id = c.id
 LEFT JOIN edu_course_selection cs ON cs.teaching_class_id = tc.id AND cs.selection_status = 'selected'
 LEFT JOIN edu_grade g ON g.selection_id = cs.id AND g.grade_status = 'submitted'
 GROUP BY c.id, c.course_code, c.course_name, tc.id, tc.teaching_class_code;
+
+CREATE VIEW v_teaching_class_detail AS
+SELECT
+  tc.id,
+  tc.course_id,
+  tc.teacher_id,
+  tc.semester_id,
+  tc.teaching_class_code,
+  tc.capacity,
+  tc.selected_count,
+  tc.class_status,
+  c.course_code,
+  c.course_name,
+  t.teacher_name,
+  sem.semester_name,
+  sem.is_current
+FROM edu_teaching_class tc
+JOIN edu_course c ON c.id = tc.course_id
+JOIN edu_teacher t ON t.id = tc.teacher_id
+JOIN edu_semester sem ON sem.id = tc.semester_id;
+
+CREATE VIEW v_student_course_selection_detail AS
+SELECT
+  cs.id AS selection_id,
+  cs.student_id,
+  cs.teaching_class_id,
+  cs.selection_status,
+  cs.selected_at,
+  c.course_code,
+  c.course_name,
+  c.credit,
+  t.teacher_name,
+  sem.semester_name,
+  tc.teaching_class_code
+FROM edu_course_selection cs
+JOIN edu_teaching_class tc ON tc.id = cs.teaching_class_id
+JOIN edu_course c ON c.id = tc.course_id
+JOIN edu_teacher t ON t.id = tc.teacher_id
+JOIN edu_semester sem ON sem.id = tc.semester_id;
+
+CREATE VIEW v_student_grade_detail AS
+SELECT
+  cs.id AS selection_id,
+  cs.student_id,
+  c.course_name,
+  c.credit,
+  sem.semester_name,
+  sem.start_date,
+  g.score
+FROM edu_grade g
+JOIN edu_course_selection cs ON g.selection_id = cs.id
+JOIN edu_teaching_class tc ON cs.teaching_class_id = tc.id
+JOIN edu_course c ON tc.course_id = c.id
+JOIN edu_semester sem ON sem.id = tc.semester_id;
 
 -- 复杂查询 1：学生按学期查询个人课表
 -- SELECT * FROM v_student_course_schedule WHERE student_id = ? AND semester_id = ? ORDER BY weekday, start_section;

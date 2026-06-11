@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate; 
 import org.springframework.web.bind.annotation.*;
 import java.util.List; 
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/course-selections")
@@ -62,6 +63,47 @@ public class CourseSelectionController {
     return ApiResponse.success();
   }
 
+  @GetMapping("/my-courses")
+  public ApiResponse<List<Map<String, Object>>> myCourses(@RequestParam Long studentId) {
+      String sql = """
+          SELECT
+              selection_id AS selectionId,
+              teaching_class_id AS teachingClassId,
+              selection_status AS selectionStatus,
+              selected_at AS selectedAt,
+              course_code AS courseCode,
+              course_name AS courseName,
+              credit,
+              teacher_name AS teacherName,
+              semester_name AS semesterName,
+              teaching_class_code AS teachingClassCode
+          FROM v_student_course_selection_detail
+          WHERE student_id = ?
+          ORDER BY selected_at DESC
+          """;
+      return ApiResponse.success(jdbcTemplate.queryForList(sql, studentId));
+  }
+
+  @GetMapping("/options")
+  public ApiResponse<List<Map<String, Object>>> options() {
+      String sql = """
+          SELECT
+              d.selection_id AS selectionId,
+              d.student_id AS studentId,
+              s.student_no AS studentNo,
+              s.student_name AS studentName,
+              d.teaching_class_id AS teachingClassId,
+              d.course_name AS courseName,
+              d.teaching_class_code AS teachingClassCode,
+              d.semester_name AS semesterName,
+              d.selection_status AS selectionStatus
+          FROM v_student_course_selection_detail d
+          JOIN edu_student s ON s.id = d.student_id
+          ORDER BY d.semester_name DESC, d.course_name, s.student_no
+          """;
+      return ApiResponse.success(jdbcTemplate.queryForList(sql));
+  }
+
  
   @GetMapping("/roster")
   public ApiResponse<List<StudentRosterVO>> getRoster(
@@ -74,12 +116,13 @@ public class CourseSelectionController {
               s.id AS studentId,
               s.student_no AS studentNo,
               s.student_name AS studentName,
-              ac.class_name AS className,
-              cs.status AS status
+              cls.class_name AS className,
+              cs.selection_status AS status
           FROM edu_course_selection cs
           JOIN edu_student s ON cs.student_id = s.id
-          JOIN edu_admin_class ac ON s.class_id = ac.id
+          JOIN edu_class cls ON s.class_id = cls.id
           WHERE cs.teaching_class_id = ?
+            AND cs.selection_status = 'selected'
           """);
       
       List<Object> params = new java.util.ArrayList<>();
@@ -92,7 +135,7 @@ public class CourseSelectionController {
           params.add(keyword.trim());
       }
       
-      sqlBuilder.append(" ORDER BY ac.class_name, s.student_no");
+      sqlBuilder.append(" ORDER BY cls.class_name, s.student_no");
 
       List<StudentRosterVO> roster = jdbcTemplate.query(sqlBuilder.toString(), (rs, rowNum) -> {
           StudentRosterVO vo = new StudentRosterVO();

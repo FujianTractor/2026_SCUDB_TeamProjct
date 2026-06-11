@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 public class GradeVO {
     private Long selectionId;
     private String courseName;
-    private Integer credits;
+    private BigDecimal credits;
     private String semester;
     private BigDecimal score;
 }

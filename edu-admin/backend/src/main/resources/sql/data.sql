@@ -89,24 +89,30 @@ INSERT INTO edu_classroom (id, building, room_no, capacity, has_multimedia, clas
 INSERT INTO edu_teaching_class (id, course_id, teacher_id, semester_id, teaching_class_code, capacity, selected_count, class_status) VALUES
 (1, 1, 1, 2, 'DBS001-2026-01', 60, 2, 'open'),
 (2, 2, 2, 2, 'JAVA001-2026-01', 50, 1, 'open'),
-(3, 4, 3, 2, 'MATH001-2026-01', 100, 1, 'open');
+(3, 4, 3, 2, 'MATH001-2026-01', 100, 1, 'open'),
+(4, 3, 1, 2, 'WEB001-2026-01', 45, 2, 'open');
 
 INSERT INTO edu_teaching_class_schedule (teaching_class_id, classroom_id, weekday, start_section, end_section) VALUES
 (1, 1, 1, 1, 2),
 (1, 1, 3, 3, 4),
 (2, 2, 2, 1, 2),
-(3, 3, 4, 5, 6);
+(3, 3, 4, 5, 6),
+(4, 2, 5, 3, 4);
 
 INSERT INTO edu_course_selection (id, student_id, teaching_class_id, selection_status, selected_at) VALUES
 (1, 1, 1, 'selected', NOW()),
 (2, 2, 1, 'selected', NOW()),
 (3, 1, 2, 'selected', NOW()),
-(4, 4, 3, 'selected', NOW());
+(4, 4, 3, 'selected', NOW()),
+(5, 3, 4, 'selected', NOW()),
+(6, 4, 4, 'selected', NOW());
 
 INSERT INTO edu_grade (selection_id, score, grade_point, grade_status, submitted_at) VALUES
 (1, 88.00, 3.70, 'submitted', NOW()),
 (2, 76.00, 2.70, 'submitted', NOW()),
-(3, 92.00, 4.00, 'submitted', NOW());
+(3, 92.00, 4.00, 'submitted', NOW()),
+(5, 84.00, 3.40, 'submitted', NOW()),
+(6, 79.00, 2.90, 'submitted', NOW());
 
 UPDATE sys_user SET related_id = 1 WHERE id = 2;
 UPDATE sys_user SET related_id = 1 WHERE id = 3;

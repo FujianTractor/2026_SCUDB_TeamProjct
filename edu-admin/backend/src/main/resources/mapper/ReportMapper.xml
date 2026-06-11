@@ -17,7 +17,15 @@
 
   <select id="gradeStatistics" resultType="map">
     SELECT * FROM v_course_grade_statistics
-    <if test="courseId != null">WHERE course_id = #{courseId}</if>
+    <where>
+      <if test="courseId != null">AND course_id = #{courseId}</if>
+      <if test="teachingClassId != null">AND teaching_class_id = #{teachingClassId}</if>
+      <if test="teacherId != null">
+        AND teaching_class_id IN (
+          SELECT id FROM edu_teaching_class WHERE teacher_id = #{teacherId}
+        )
+      </if>
+    </where>
     ORDER BY course_code, teaching_class_code
   </select>
 

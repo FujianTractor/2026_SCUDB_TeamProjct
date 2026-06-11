@@ -35,8 +35,10 @@ public class ReportController {
   }
 
   @GetMapping("/grade-statistics")
-  public ApiResponse<List<Map<String, Object>>> gradeStatistics(@RequestParam(required = false) Long courseId) {
-    return ApiResponse.success(reportService.gradeStatistics(courseId));
+  public ApiResponse<List<Map<String, Object>>> gradeStatistics(@RequestParam(required = false) Long courseId,
+                                                                @RequestParam(required = false) Long teacherId,
+                                                                @RequestParam(required = false) Long teachingClassId) {
+    return ApiResponse.success(reportService.gradeStatistics(courseId, teacherId, teachingClassId));
   }
 
   @GetMapping("/completed-credits")

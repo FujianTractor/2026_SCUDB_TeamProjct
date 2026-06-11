@@ -2,42 +2,36 @@
   <div class="page">
     <h1 class="page-title">教学班学生名单</h1>
     <div class="panel">
-      
-      
-      <div class="toolbar" style="margin-bottom: 15px; display: flex; align-items: center;">
-   
-        <el-select 
-          v-model="selectedTeachingClassId" 
-          placeholder="请选择或搜索教学班" 
-          filterable 
-          clearable
-          style="width: 250px; margin-right: 10px;"
-          @change="handleClassChange"
+      <div class="toolbar">
+        <el-select
+          v-model="selectedTeachingClassId"
+          placeholder="请选择课程/教学班"
+          filterable
+          style="width: 340px"
+          @change="load"
         >
-          <el-option 
-            v-for="item in teachingClassOptions" 
-            :key="item.id" 
-            :label="`${item.teachingClassCode} (${item.courseName})`" 
-            :value="item.id" 
+          <el-option
+            v-for="item in teachingClassOptions"
+            :key="item.id"
+            :label="formatTeachingClass(item)"
+            :value="item.id"
           />
         </el-select>
 
-       
-        <el-input 
-          v-model="searchKeyword" 
-          placeholder="请输入学生姓名或学号" 
-          clearable 
-          style="width: 250px; margin-right: 10px;"
+        <el-input
+          v-model="searchKeyword"
+          placeholder="输入学生姓名或学号"
+          clearable
+          style="width: 260px"
           @keyup.enter="load"
+          @clear="load"
         />
-        
-    
+
         <el-button type="primary" @click="load">查询</el-button>
         <el-button @click="resetSearch">重置</el-button>
       </div>
 
-   
-      <el-table :data="rows" border style="width: 100%">
+      <el-table :data="rows" border style="width: 100%" empty-text="暂无选课学生">
         <el-table-column prop="studentNo" label="学号" />
         <el-table-column prop="studentName" label="姓名" />
         <el-table-column prop="className" label="行政班" />
@@ -48,26 +42,37 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { courseSelectionApi, teachingClassApi } from '../../api/modules'
+import { useAuthStore } from '../../stores/auth'
 
-import { courseSelectionApi } from '../../api/modules' 
-
-const selectedTeachingClassId = ref(null) 
-const searchKeyword = ref('')             
-const rows = ref([])                    
-
-
+const auth = useAuthStore()
+const selectedTeachingClassId = ref(null)
+const searchKeyword = ref('')
+const rows = ref([])
 const teachingClassOptions = ref([])
+
+function formatTeachingClass(item) {
+  return `${item.courseName || '课程'} - ${item.teachingClassCode}`
+}
+
+async function loadTeachingClasses() {
+  teachingClassOptions.value = await teachingClassApi.options({ teacherId: auth.user?.relatedId })
+  if (teachingClassOptions.value.length > 0 && !selectedTeachingClassId.value) {
+    selectedTeachingClassId.value = teachingClassOptions.value[0].id
+    await load()
+  }
+}
 
 async function load() {
   if (!selectedTeachingClassId.value) {
-    ElMessage.warning('请先选择一个教学班')
+    rows.value = []
     return
   }
-  
+
   try {
-    const res = await courseSelectionApi.roster({ 
+    const res = await courseSelectionApi.roster({
       teachingClassId: selectedTeachingClassId.value,
       keyword: searchKeyword.value
     })
@@ -78,24 +83,10 @@ async function load() {
   }
 }
 
-
-function handleClassChange() {
+function resetSearch() {
   searchKeyword.value = ''
   load()
 }
 
-
-function resetSearch() {
-  searchKeyword.value = ''
-  if (selectedTeachingClassId.value) {
-    load()
-  } else {
-    rows.value = []
-  }
-}
-
-onMounted(async () => {
-
-  // 例如：teachingClassOptions.value = await teachingClassApi.myClasses()
-})
+onMounted(loadTeachingClasses)
 </script>

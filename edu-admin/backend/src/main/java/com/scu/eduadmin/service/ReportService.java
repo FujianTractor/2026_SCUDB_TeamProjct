@@ -20,8 +20,8 @@ public class ReportService {
     return reportMapper.teacherRoster(teacherId, teachingClassId);
   }
 
-  public List<Map<String, Object>> gradeStatistics(Long courseId) {
-    return reportMapper.gradeStatistics(courseId);
+  public List<Map<String, Object>> gradeStatistics(Long courseId, Long teacherId, Long teachingClassId) {
+    return reportMapper.gradeStatistics(courseId, teacherId, teachingClassId);
   }
 
   public List<Map<String, Object>> completedCredits(Long studentId) {

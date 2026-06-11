@@ -13,14 +13,22 @@ export const crudApi = (endpoint) => ({
 
 export const courseSelectionApi = {
   page: (params) => request.get('/course-selections', { params }),
+  myCourses: (params) => request.get('/course-selections/my-courses', { params }),
+  options: () => request.get('/course-selections/options'),
   select: (data) => request.post('/course-selections/select', data),
   drop: (data) => request.post('/course-selections/drop', data),
   roster: (params) => request.get('/course-selections/roster', { params }) 
 }
 
+export const teachingClassApi = {
+  page: (params) => request.get('/teaching-classes', { params }),
+  options: (params) => request.get('/teaching-classes/options', { params })
+}
+
 export const gradeApi = {
   page: (params) => request.get('/grades', { params }),
   batch: (grades) => request.post('/grades/batch', { grades }),
+  inputRoster: (params) => request.get('/grades/input-roster', { params }),
   myGrades: (params) => request.get('/grades/my-grades', { params })
 }
 
