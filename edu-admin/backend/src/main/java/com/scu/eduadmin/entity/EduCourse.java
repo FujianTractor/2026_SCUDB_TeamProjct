@@ -16,5 +16,4 @@ public class EduCourse extends BaseEntity {
   private BigDecimal credit;
   private String courseType;
   private String courseStatus;
-  private Long teacherId;
 }
