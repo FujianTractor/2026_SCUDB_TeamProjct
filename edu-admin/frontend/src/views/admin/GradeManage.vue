@@ -6,8 +6,6 @@
 import { ref } from 'vue'
 import CrudPage from '../../components/CrudPage.vue'
 
-import request from '@/utils/request' 
-
 const fields = [
   { prop: 'id', label: 'ID', edit: false },
   

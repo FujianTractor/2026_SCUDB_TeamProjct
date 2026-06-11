@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
-import com.scu.eduadmin.common.BusinessException;
+import com.scu.eduadmin.exception.BusinessException;
 
 @Service
 public class EduTeacherServiceImpl extends ServiceImpl<EduTeacherMapper, EduTeacher> implements EduTeacherService {
@@ -27,7 +27,7 @@ public class EduTeacherServiceImpl extends ServiceImpl<EduTeacherMapper, EduTeac
        
         QueryWrapper<EduTeachingClass> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("teacher_id", id);
-        Integer count = teachingClassMapper.selectCount(queryWrapper);
+        Long count = teachingClassMapper.selectCount(queryWrapper);
 
        
         if (count != null && count > 0) {

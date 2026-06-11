@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class EduCourseSelectionServiceImpl extends ServiceImpl<EduCourseSelectio
                 .eq(EduGrade::getSelectionId, selection.getId()));
 
         if (grade != null) {
-            if (grade.getScore() != null && grade.getScore() > 0) {
+            if (grade.getScore() != null && grade.getScore().compareTo(BigDecimal.ZERO) > 0) {
                 throw new BusinessException("该课程已录入成绩，无法退课，请联系教务处处理！");
             } else {
                 eduGradeMapper.deleteById(grade.getId());
